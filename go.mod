@@ -8,4 +8,5 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/sethvargo/go-password v0.2.0
+	golang.org/x/crypto v0.0.0-20210314154223-e6e6c4f2bb5b // indirect
 )

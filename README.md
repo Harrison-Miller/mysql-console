@@ -1,8 +1,14 @@
 # MySQL Console
 
-A simple web page to run queries against your mysql database.
+A simple web console for querying your mysql database.
 
-**Note**: This was created as a fun evening project. You should not use this for any serious purpose. I am not responsible for any harm that may come of using this software.
+
+### Features
+
+* mysql-client like console
+* Simple login page and auth protection
+* Database connection status
+* Rerun query from history
 
 ![Screenshot](media/screenshot.png?raw=true)
 
@@ -10,11 +16,12 @@ A simple web page to run queries against your mysql database.
 
 Go 1.16
 
-## Build
+## Build & Run
 
 `go build . -o mysql-console`
+`go run . `
 
-## Docker
+## Run with Docker
 
 `docker run --rm -it -p8080:8080 harrisonmiller/mysql-console`
 
@@ -24,6 +31,6 @@ Go 1.16
 | -------- | ----------- | ------- | ----- |
 | HOST | address for the web server | `:8080` | |
 | DB_CONN | db connection string | `root:password@tcp(127.0.0.1:3306)/`| [uses DSN format](https://github.com/go-sql-driver/mysql#dsn-data-source-name) |
-| USERNAME | basic auth username | `admin` | |
-| PASSWORD | basic auth password | `admin` | |
+| USERNAME | username | `admin` | |
+| PASSWORD | password as bcrypt hash | `admin` | [format](https://en.wikipedia.org/wiki/Bcrypt#Description) |
 | TITLE | custom page title | `MySQL Console` | |

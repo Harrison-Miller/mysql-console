@@ -16,7 +16,7 @@ import (
 var host = ":8080"
 var conn = "root:password@tcp(127.0.0.1:3306)/"
 var username = "admin"
-var password = "admin"
+var password = "$2y$10$LqRHFROkaYQeHJEkMvI/9.rGgVO4hRsM10PSod7MJLt3W3z3Nc3ny"
 var title = "MySQL Console"
 
 type Env struct {

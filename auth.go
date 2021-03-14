@@ -3,18 +3,21 @@ package main
 import (
 	"crypto/subtle"
 	"github.com/dgrijalva/jwt-go"
+	pass "github.com/sethvargo/go-password/password"
+	"golang.org/x/crypto/bcrypt"
 	"html/template"
-	"log"
 	"net/http"
 	"time"
-	pass "github.com/sethvargo/go-password/password"
 )
 
 const TOKEN_NAME = "MYSQL_CONSOLE_TOKEN"
 var auth_secret = ""
 
+var loginTemplate *template.Template
+
 func init() {
 	auth_secret = pass.MustGenerate(64, 10, 10, false, false)
+	loginTemplate = template.Must(template.ParseFiles("templates/base.html", "templates/login.html"))
 }
 
 type Claims struct {
@@ -22,26 +25,22 @@ type Claims struct {
 }
 
 func loginPage(w http.ResponseWriter, r *http.Request) {
-	// t, err := template.ParseFS(templateFiles, "templates/login.html")
-	t, err := template.ParseFiles("templates/base.html", "templates/login.html")
-	if err != nil {
-		log.Println("Error parsing login.html: ", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	t.Execute(w, Env{
+	loginTemplate.Execute(w, Env{
 		Title: title,
 	})
 }
 
-// TODO: handle redirects in js
 func login(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		u := r.FormValue("username")
 		p := r.FormValue("password")
 
-		if subtle.ConstantTimeCompare([]byte(u), []byte(username)) != 1 || subtle.ConstantTimeCompare([]byte(p), []byte(password)) != 1 {
+		if subtle.ConstantTimeCompare([]byte(u), []byte(username)) != 1 {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		if err := bcrypt.CompareHashAndPassword([]byte(password), []byte(p)); err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}

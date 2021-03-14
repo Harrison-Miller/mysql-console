@@ -21,13 +21,6 @@ func status(w http.ResponseWriter, r *http.Request) {
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
-
-	/*indexTemplate, err := template.ParseFiles("templates/base.html", "templates/login.html")
-	if err != nil {
-		log.Println("Error parsing index.html: ", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}*/
 	indexTemplate.Execute(w, Env{
 		Title: title,
 	})
