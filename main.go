@@ -112,6 +112,13 @@ func handleQuery(w http.ResponseWriter, statement string) {
 	table.SetHeader(columns)
 	table.SetAutoFormatHeaders(false)
 
+	if len(columns) == 0 {
+		jsonResponse(w, MsgResp{
+			Message: "OK",
+		})
+		return
+	}
+
 	for rows.Next() {
 		values := make([]interface{}, len(columns))
 		for i, _ := range columns {
