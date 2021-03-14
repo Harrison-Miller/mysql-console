@@ -7,6 +7,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"github.com/felixge/httpsnoop"
 	"github.com/go-sql-driver/mysql"
 	"github.com/olekukonko/tablewriter"
 	"html/template"
@@ -209,11 +210,13 @@ func main() {
 
 	go keepMySQLAlive()
 
+	mux := http.NewServeMux()
+
 	var staticFS = http.FS(staticFiles)
 	fs := http.FileServer(staticFS)
-	http.Handle("/static/", fs)
+	mux.Handle("/static/", fs)
 
-	http.HandleFunc("/", basicAuth(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", basicAuth(func(w http.ResponseWriter, r *http.Request) {
 		// t, err := template.ParseFS(templateFiles, "templates/index.html")
 		t, err := template.ParseFiles("templates/index.html")
 		if err != nil {
@@ -225,7 +228,7 @@ func main() {
 		})
 	}))
 
-	http.HandleFunc("/query", basicAuth(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/query", basicAuth(func(w http.ResponseWriter, r *http.Request) {
 		if !validDB || db == nil {
 			jsonResponse(w, ErrResp{Error: "Not connected to database"})
 			return
@@ -239,7 +242,7 @@ func main() {
 		}
 	}))
 
-	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
 		if !validDB || db == nil {
 			jsonResponse(w, ErrResp{Error: "Not connected to database"})
 			return
@@ -248,8 +251,17 @@ func main() {
 		jsonResponse(w, MsgResp{Message: "Connected to the database"})
 	})
 
+	loggingHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		m := httpsnoop.CaptureMetrics(mux, w, r)
+		log.Printf("%s %s %d %s",
+			r.Method,
+			r.URL,
+			m.Code,
+			m.Duration)
+	})
+
 	log.Printf("Starting server at: %s", host)
-	err := http.ListenAndServe(host, nil)
+	err := http.ListenAndServe(host, loggingHandler)
 	if err != nil {
 		panic(err)
 		return
