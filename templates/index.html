@@ -1,0 +1,53 @@
+<html>
+<head>
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/jquery-3.6.0.min.js"></script>
+    <title>MySQL Querier</title>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-primary">
+    <a class="navbar-brand" href="#">MySQL Querier</a>
+</nav>
+
+<h4>Output</h4>
+<div class="h-75 w-100 bg-dark overflow-scroll" id="output">
+</div>
+
+
+<div class="bottom-0">
+    <div class="form-group">
+        <label for="query">Query</label>
+        <textarea class="form-control" autofocus id="query" rows="3" style="resize: none;"></textarea>
+    </div>
+</div>
+</body>
+<script>
+    const output = $("#output");
+    const query = $("#query");
+
+    query.keypress(function (e) {
+        const code = (e.keyCode ? e.keyCode : e.which);
+        if (code == 13){
+            console.log("enter pressed")
+            const val = query.val();
+            query.val("").focus();
+            output.append(`<pre class="text-info">\> ${val}</pre>`);
+            $.getJSON("/query", { "statement": val }).
+                done(function (data) {
+                    if (data.err) {
+                        output.append(`<pre class="text-danger">${data.err}</pre>`);
+                        output.scrollTop(output[0].scrollHeight);
+                        return;
+                    }
+                    let message = data.message;
+                    message = message.replaceAll("\n", "<br/>");
+                    message = message.replaceAll("\u0026", " ");
+                    output.append(`<pre class="text-light">${message}</pre>`);
+                    output.scrollTop(output[0].scrollHeight);
+                })
+            return false;
+        }
+    });
+</script>
+</html>
