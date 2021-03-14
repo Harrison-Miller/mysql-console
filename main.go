@@ -14,11 +14,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
-
-// TODO:
-// * differentiate between query and exec
 
 var host = ":8080"
 var conn = "root:password@tcp(127.0.0.1:3306)/"
@@ -88,6 +86,81 @@ type MsgResp struct {
 	Message string `json:"message"`
 }
 
+func isExec(statement string) bool {
+	statement = strings.TrimSpace(strings.ToLower(statement))
+	return strings.HasPrefix(statement, "update") || strings.HasPrefix(statement, "insert") || strings.HasPrefix(statement, "delete")
+}
+
+func handleQuery(w http.ResponseWriter, statement string) {
+	rows, err := db.Query(statement)
+	if err != nil {
+		jsonResponse(w, ErrResp{Error: err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	columns, err := rows.Columns()
+	if err != nil {
+		jsonResponse(w, ErrResp{
+			Error: err.Error(),
+		})
+		return
+	}
+
+	buffer := bytes.NewBufferString("")
+	table := tablewriter.NewWriter(buffer)
+	table.SetHeader(columns)
+	table.SetAutoFormatHeaders(false)
+
+	for rows.Next() {
+		values := make([]interface{}, len(columns))
+		for i, _ := range columns {
+			values[i] = new(sql.RawBytes)
+		}
+
+
+
+		err := rows.Scan(values...)
+		if err != nil {
+			jsonResponse(w, ErrResp{Error: err.Error()})
+			return
+		}
+
+		valueStrings := []string{}
+		for _, value := range values {
+			valueStrings = append(valueStrings, fmt.Sprintf("%s", value))
+		}
+		table.Append(valueStrings)
+	}
+	table.Render()
+	jsonResponse(w, MsgResp{
+		Message: buffer.String(),
+	})
+}
+
+func handleExec(w http.ResponseWriter, statement string) {
+	res, err := db.Exec(statement)
+	if err != nil {
+		jsonResponse(w, ErrResp{
+			Error: err.Error(),
+		})
+		return
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		jsonResponse(w, ErrResp{
+			Error: err.Error(),
+		})
+		return
+	}
+
+	message := fmt.Sprintf("%d row(s) affected", rowsAffected)
+	jsonResponse(w, MsgResp{
+		Message: message,
+	})
+}
+
 func basicAuth(handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, pass, ok := r.BasicAuth()
@@ -140,51 +213,11 @@ func main() {
 		}
 
 		statement := r.URL.Query().Get("statement")
-
-		rows, err := db.Query(statement)
-		if err != nil {
-			jsonResponse(w, ErrResp{Error: err.Error()})
-			return
+		if isExec(statement) {
+			handleExec(w, statement)
+		} else {
+			handleQuery(w, statement)
 		}
-		defer rows.Close()
-
-		columns, err := rows.Columns()
-		if err != nil {
-			jsonResponse(w, ErrResp{
-				Error: err.Error(),
-			})
-			return
-		}
-
-		buffer := bytes.NewBufferString("")
-		table := tablewriter.NewWriter(buffer)
-		table.SetHeader(columns)
-		table.SetAutoFormatHeaders(false)
-
-		for rows.Next() {
-			values := make([]interface{}, len(columns))
-			for i, _ := range columns {
-				values[i] = new(sql.RawBytes)
-			}
-
-
-
-			err := rows.Scan(values...)
-			if err != nil {
-				jsonResponse(w, ErrResp{Error: err.Error()})
-				return
-			}
-
-			valueStrings := []string{}
-			for _, value := range values {
-				valueStrings = append(valueStrings, fmt.Sprintf("%s", value))
-			}
-			table.Append(valueStrings)
-		}
-		table.Render()
-		jsonResponse(w, MsgResp{
-			Message: buffer.String(),
-		})
 	}))
 
 	log.Printf("Starting server at: %s", host)
