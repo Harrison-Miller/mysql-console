@@ -39,8 +39,7 @@
 
     function runQuery(statement) {
         output.append(`<pre class="text-info">\> ${statement} <i class="text-success fas fa-play" role="button" onclick="runQuery('${statement}')"></i></pre> `);
-        $.getJSON("/query", { "statement": statement }).
-        done(function (data) {
+        $.getJSON("/query", { "statement": statement }).done(function (data) {
             if (data.err) {
                 output.append(`<pre class="text-danger">${data.err}</pre>`);
                 output.scrollTop(output[0].scrollHeight);
@@ -50,6 +49,9 @@
             message = message.replaceAll("\n", "<br/>");
             message = message.replaceAll("\u0026", " ");
             output.append(`<pre class="text-light">${message}</pre>`);
+            output.scrollTop(output[0].scrollHeight);
+        }).fail(function () {
+            output.append(`<pre class="text-danger">Request failed</pre>`);
             output.scrollTop(output[0].scrollHeight);
         })
     }
