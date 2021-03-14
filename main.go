@@ -17,8 +17,11 @@ import (
 	"time"
 )
 
+// TODO:
+// * differentiate between query and exec
+
 var host = ":8080"
-var conn = "root:password@tcp(127.0.0.1:3306)"
+var conn = "root:password@tcp(127.0.0.1:3306)/"
 var username = "admin"
 var password = "admin"
 
@@ -163,6 +166,8 @@ func main() {
 			for i, _ := range columns {
 				values[i] = new(sql.RawBytes)
 			}
+
+
 
 			err := rows.Scan(values...)
 			if err != nil {
