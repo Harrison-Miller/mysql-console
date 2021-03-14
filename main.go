@@ -239,6 +239,15 @@ func main() {
 		}
 	}))
 
+	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
+		if !validDB || db == nil {
+			jsonResponse(w, ErrResp{Error: "Not connected to database"})
+			return
+		}
+
+		jsonResponse(w, MsgResp{Message: "Connected to the database"})
+	})
+
 	log.Printf("Starting server at: %s", host)
 	err := http.ListenAndServe(host, nil)
 	if err != nil {

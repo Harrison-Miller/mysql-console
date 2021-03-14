@@ -11,7 +11,8 @@
     <a class="navbar-brand" href="#">{{ .Title }}</a>
 </nav>
 
-<h4>Output</h4>
+<h4>Output <span id="status" class="badge bg-danger">Disconnected</span> </h4>
+
 
 <i class="text-danger fas fa-ban position-absolute" style="right: 15px" role="button" onclick="clearOutput()"></i>
 <div class="h-75 w-100 bg-dark overflow-scroll" id="output">
@@ -28,6 +29,7 @@
 <script>
     const output = $("#output");
     const query = $("#query");
+    const status = $("#status");
 
     query.keypress(function (e) {
         const code = (e.keyCode ? e.keyCode : e.which);
@@ -64,7 +66,28 @@
         }).fail(function () {
             output.append(`<pre class="text-danger overflow-visible">Request failed</pre>`);
             output.scrollTop(output[0].scrollHeight);
-        })
+        });
     }
+
+    function updateConnectionStatus() {
+        $.getJSON("/status").done(function (data) {
+            if (data.err) {
+                status.removeClass("bg-success");
+                status.addClass("bg-danger");
+                status.html("Disconnected");
+            } else {
+                status.removeClass("bg-danger");
+                status.addClass("bg-success");
+                status.html("Connected");
+            }
+        }).fail(function () {
+            status.removeClass("bg-success");
+            status.addClass("bg-danger");
+            status.html("Disconnected")
+        });
+    }
+
+    updateConnectionStatus();
+    setInterval(updateConnectionStatus, 5000);
 </script>
 </html>
