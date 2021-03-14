@@ -4,10 +4,10 @@ WORKDIR /build
 
 COPY . .
 RUN go get .
-RUN CGO_ENABLED=0 go build -o mysql-querier
+RUN CGO_ENABLED=0 go build -o mysql-console
 
 FROM scratch
 
-COPY --from=build /build/mysql-querier .
+COPY --from=build /build/mysql-console .
 
-CMD ["/mysql-querier"]
+CMD ["/mysql-console"]

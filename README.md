@@ -1,4 +1,4 @@
-# MySQL Querier
+# MySQL Console
 
 A simple web page to run queries against your mysql database.
 
@@ -12,17 +12,17 @@ Go 1.16
 
 ## Build
 
-`go build . -o mysql-querier`
+`go build . -o mysql-console`
 
 ## Docker
 
-`docker run --rm -it -p8080:8080 mysql-querier`
+`docker run --rm -it -p8080:8080 mysql-console`
 
 ## Environment Variables
 
 | Variable | Description | Default | Notes |
 | -------- | ----------- | ------- | ----- |
-| HOST | host for the web server | `:8080` | |
+| HOST | address for the web server | `:8080` | |
 | DB_CONN | db connection string | `root:password@tcp(127.0.0.1:3306)/`| [uses DSN format](https://github.com/go-sql-driver/mysql#dsn-data-source-name) |
 | USERNAME | basic auth username | `admin` | |
 | PASSWORD | basic auth password | `admin` | |
