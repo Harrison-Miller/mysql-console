@@ -19,6 +19,7 @@ Go 1.16
 ## Build & Run
 
 `go build . -o mysql-console`
+
 `go run . `
 
 ## Run with Docker
