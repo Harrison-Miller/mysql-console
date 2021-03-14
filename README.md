@@ -27,4 +27,4 @@ Go 1.16
 | HOST | host for webserver | `:8080` | |
 | DB_CONN | db connection string | `root:password@tcp(127.0.0.1:3306)/`| [uses DSN format](https://github.com/go-sql-driver/mysql#dsn-data-source-name) |
 | USERNAME | basic auth username | `admin` | |
-| PASSWORD | basic auth password | `password` | |
+| PASSWORD | basic auth password | `admin` | |
