@@ -1,14 +1,12 @@
-<html>
-<head>
-    <link href="/static/css/bootstrap.min.css" rel="stylesheet" type="text/css">
-    <link href="/static/fontawesome/css/all.min.css" rel="stylesheet" type="text/css">
-    <script src="/static/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/js/jquery-3.6.0.min.js"></script>
-    <title>{{ .Title }}</title>
-</head>
-<body>
+{{ define "title" }}{{ .Title }}{{ end }}
+{{ define "content" }}
 <nav class="navbar navbar-dark bg-primary">
     <a class="navbar-brand" href="#">{{ .Title }}</a>
+    <ul class="navbar-nav">
+        <li class="nav-item">
+            <a class="nav-link me-4" href="#" onclick="logout()">Logout</a>
+        </li>
+    </ul>
 </nav>
 
 <h4>Output <span id="status" class="badge bg-danger">Disconnected</span> </h4>
@@ -25,7 +23,8 @@
         <textarea class="form-control" autofocus id="query" rows="3" style="resize: none;"></textarea>
     </div>
 </div>
-</body>
+{{ end }}
+{{ define "script" }}
 <script>
     const output = $("#output");
     const query = $("#query");
@@ -89,5 +88,17 @@
 
     updateConnectionStatus();
     setInterval(updateConnectionStatus, 5000);
+
+    function logout() {
+        setCookie("MYSQL_CONSOLE_TOKEN", "", 0)
+        window.location.href = "/login";
+    }
+
+    function setCookie(cname, cvalue, exdays) {
+        var d = new Date();
+        d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+        var expires = "expires="+d.toUTCString();
+        document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+    }
 </script>
-</html>
+{{ end }}

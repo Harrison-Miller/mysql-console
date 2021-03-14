@@ -1,0 +1,48 @@
+{{ define "title" }}{{ .Title }} - Login{{ end }}
+{{ define "content" }}
+<div class="bg-dark">
+    <div class="container h-100">
+        <div class="row align-items-center h-100">
+            <div class="card m-auto" style="width:250px;height:250px;">
+                <div class="card-body">
+                    <form onsubmit="return login()" id="login">
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input autofocus type="text" class="form-control" id="username" name="username">
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" class="form-control" id="password" name="password">
+                        </div>
+                        <button type="submit" class="my-4 btn btn-primary">Login</button>
+                    </form>
+
+                </div>
+                <div id="alert" class="card-footer d-none">
+                    <div class="alert alert-danger" role="alert">
+                        Incorrect password or username
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{ end }}
+{{ define "script" }}
+<script>
+    function login() {
+        $.ajax({
+            type: "POST",
+            url: "/login",
+            data: $("#login").serialize(),
+        })
+        .fail(function(data, status) {
+            $("#alert").removeClass("d-none");
+        })
+        .done(function() {
+            window.location.href = "/";
+        });
+        return false
+    }
+</script>
+{{ end }}

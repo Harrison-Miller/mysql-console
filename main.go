@@ -1,21 +1,15 @@
 package main
 
 import (
-	"bytes"
-	"crypto/subtle"
 	"database/sql"
 	"embed"
 	"encoding/json"
-	"fmt"
 	"github.com/felixge/httpsnoop"
 	"github.com/go-sql-driver/mysql"
-	"github.com/olekukonko/tablewriter"
-	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -92,101 +86,6 @@ type MsgResp struct {
 	Message string `json:"message"`
 }
 
-func isExec(statement string) bool {
-	statement = strings.TrimSpace(strings.ToLower(statement))
-	return strings.HasPrefix(statement, "update") || strings.HasPrefix(statement, "insert") || strings.HasPrefix(statement, "delete")
-}
-
-func handleQuery(w http.ResponseWriter, statement string) {
-	rows, err := db.Query(statement)
-	if err != nil {
-		jsonResponse(w, ErrResp{Error: err.Error()})
-		return
-	}
-	defer rows.Close()
-
-	columns, err := rows.Columns()
-	if err != nil {
-		jsonResponse(w, ErrResp{
-			Error: err.Error(),
-		})
-		return
-	}
-
-	buffer := bytes.NewBufferString("")
-	table := tablewriter.NewWriter(buffer)
-	table.SetHeader(columns)
-	table.SetAutoFormatHeaders(false)
-
-	if len(columns) == 0 {
-		jsonResponse(w, MsgResp{
-			Message: "OK",
-		})
-		return
-	}
-
-	for rows.Next() {
-		values := make([]interface{}, len(columns))
-		for i, _ := range columns {
-			values[i] = new(sql.RawBytes)
-		}
-
-
-
-		err := rows.Scan(values...)
-		if err != nil {
-			jsonResponse(w, ErrResp{Error: err.Error()})
-			return
-		}
-
-		valueStrings := []string{}
-		for _, value := range values {
-			valueStrings = append(valueStrings, fmt.Sprintf("%s", value))
-		}
-		table.Append(valueStrings)
-	}
-	table.Render()
-	jsonResponse(w, MsgResp{
-		Message: buffer.String(),
-	})
-}
-
-func handleExec(w http.ResponseWriter, statement string) {
-	res, err := db.Exec(statement)
-	if err != nil {
-		jsonResponse(w, ErrResp{
-			Error: err.Error(),
-		})
-		return
-	}
-
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		jsonResponse(w, ErrResp{
-			Error: err.Error(),
-		})
-		return
-	}
-
-	message := fmt.Sprintf("%d row(s) affected", rowsAffected)
-	jsonResponse(w, MsgResp{
-		Message: message,
-	})
-}
-
-func basicAuth(handler http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		user, pass, ok := r.BasicAuth()
-		if !ok || subtle.ConstantTimeCompare([]byte(user), []byte(username)) != 1 || subtle.ConstantTimeCompare([]byte(pass), []byte(password)) != 1 {
-			w.Header().Set("WWW-Authenticate", `Basic realm="login"`)
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		handler(w, r)
-	}
-}
-
 func main() {
 	if val := os.Getenv("HOST"); val != "" {
 		host = val
@@ -216,40 +115,10 @@ func main() {
 	fs := http.FileServer(staticFS)
 	mux.Handle("/static/", fs)
 
-	mux.HandleFunc("/", basicAuth(func(w http.ResponseWriter, r *http.Request) {
-		// t, err := template.ParseFS(templateFiles, "templates/index.html")
-		t, err := template.ParseFiles("templates/index.html")
-		if err != nil {
-			return
-		}
-
-		t.Execute(w, Env{
-			Title: title,
-		})
-	}))
-
-	mux.HandleFunc("/query", basicAuth(func(w http.ResponseWriter, r *http.Request) {
-		if !validDB || db == nil {
-			jsonResponse(w, ErrResp{Error: "Not connected to database"})
-			return
-		}
-
-		statement := r.URL.Query().Get("statement")
-		if isExec(statement) {
-			handleExec(w, statement)
-		} else {
-			handleQuery(w, statement)
-		}
-	}))
-
-	mux.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
-		if !validDB || db == nil {
-			jsonResponse(w, ErrResp{Error: "Not connected to database"})
-			return
-		}
-
-		jsonResponse(w, MsgResp{Message: "Connected to the database"})
-	})
+	mux.HandleFunc("/login", login)
+	mux.Handle("/", verify(index))
+	mux.Handle("/query", verify(query))
+	mux.Handle("/status", verify(status))
 
 	loggingHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m := httpsnoop.CaptureMetrics(mux, w, r)
