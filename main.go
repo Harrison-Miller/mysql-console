@@ -22,6 +22,11 @@ var host = ":8080"
 var conn = "root:password@tcp(127.0.0.1:3306)/"
 var username = "admin"
 var password = "admin"
+var title = "MySQL Console"
+
+type Env struct {
+	Title string
+}
 
 //go:embed templates
 var templateFiles embed.FS
@@ -198,6 +203,10 @@ func main() {
 		password = val
 	}
 
+	if val := os.Getenv("TITLE"); val != "" {
+		title = val
+	}
+
 	go keepMySQLAlive()
 
 	var staticFS = http.FS(staticFiles)
@@ -210,7 +219,9 @@ func main() {
 			return
 		}
 
-		t.Execute(w, nil)
+		t.Execute(w, Env{
+			Title: title,
+		})
 	}))
 
 	http.HandleFunc("/query", basicAuth(func(w http.ResponseWriter, r *http.Request) {
