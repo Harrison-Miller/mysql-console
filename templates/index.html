@@ -31,14 +31,18 @@
         const code = (e.keyCode ? e.keyCode : e.which);
         if (code == 13){
             const val = query.val();
-            query.val("").focus();
+            setText("");
             runQuery(val);
             return false;
         }
     });
 
+    function setText(statement) {
+        query.val(statement).focus();
+    }
+
     function runQuery(statement) {
-        output.append(`<pre class="text-info">\> ${statement} <i class="text-success fas fa-play" role="button" onclick="runQuery('${statement}')"></i></pre> `);
+        output.append(`<pre class="text-info">\> ${statement} <i class="text-success fas fa-play" role="button" onclick="runQuery('${statement}')"></i> <i class="text-secondary fas fa-edit" role="button" onclick="setText('${statement}')"></i></pre> `);
         $.getJSON("/query", { "statement": statement }).done(function (data) {
             if (data.err) {
                 output.append(`<pre class="text-danger">${data.err}</pre>`);
