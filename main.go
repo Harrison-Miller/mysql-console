@@ -214,7 +214,8 @@ func main() {
 	http.Handle("/static/", fs)
 
 	http.HandleFunc("/", basicAuth(func(w http.ResponseWriter, r *http.Request) {
-		t, err := template.ParseFS(templateFiles, "templates/index.html")
+		// t, err := template.ParseFS(templateFiles, "templates/index.html")
+		t, err := template.ParseFiles("templates/index.html")
 		if err != nil {
 			return
 		}

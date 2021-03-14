@@ -12,6 +12,8 @@
 </nav>
 
 <h4>Output</h4>
+
+<i class="text-danger fas fa-ban position-absolute" style="right: 15px" role="button" onclick="clearOutput()"></i>
 <div class="h-75 w-100 bg-dark overflow-scroll" id="output">
 </div>
 
@@ -41,21 +43,26 @@
         query.val(statement).focus();
     }
 
+    function clearOutput() {
+        $("pre").remove();
+        setText("");
+    }
+
     function runQuery(statement) {
-        output.append(`<pre class="text-info">\> ${statement} <i class="text-success fas fa-play" role="button" onclick="runQuery('${statement}')"></i> <i class="text-secondary fas fa-edit" role="button" onclick="setText('${statement}')"></i></pre> `);
+        output.append(`<pre class="text-info overflow-visible">\> ${statement} <i class="text-success fas fa-play" role="button" onclick="runQuery('${statement}')"></i> <i class="text-secondary fas fa-edit" role="button" onclick="setText('${statement}')"></i></pre> `);
         $.getJSON("/query", { "statement": statement }).done(function (data) {
             if (data.err) {
-                output.append(`<pre class="text-danger">${data.err}</pre>`);
+                output.append(`<pre class="text-danger overflow-visible">${data.err}</pre>`);
                 output.scrollTop(output[0].scrollHeight);
                 return;
             }
             let message = data.message;
             message = message.replaceAll("\n", "<br/>");
             message = message.replaceAll("\u0026", " ");
-            output.append(`<pre class="text-light">${message}</pre>`);
+            output.append(`<pre class="text-light overflow-visible">${message}</pre>`);
             output.scrollTop(output[0].scrollHeight);
         }).fail(function () {
-            output.append(`<pre class="text-danger">Request failed</pre>`);
+            output.append(`<pre class="text-danger overflow-visible">Request failed</pre>`);
             output.scrollTop(output[0].scrollHeight);
         })
     }
