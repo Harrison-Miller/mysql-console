@@ -8,7 +8,7 @@ import (
 var indexTemplate *template.Template
 
 func init() {
-	indexTemplate = template.Must(template.ParseFiles("templates/base.html", "templates/index.html"))
+	indexTemplate = template.Must(template.ParseFS(templateFiles, "templates/base.html", "templates/index.html"))
 }
 
 func status(w http.ResponseWriter, r *http.Request) {

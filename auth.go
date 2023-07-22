@@ -11,13 +11,14 @@ import (
 )
 
 const TOKEN_NAME = "MYSQL_CONSOLE_TOKEN"
+
 var auth_secret = ""
 
 var loginTemplate *template.Template
 
 func init() {
 	auth_secret = pass.MustGenerate(64, 10, 10, false, false)
-	loginTemplate = template.Must(template.ParseFiles("templates/base.html", "templates/login.html"))
+	loginTemplate = template.Must(template.ParseFS(templateFiles, "templates/base.html", "templates/login.html"))
 }
 
 type Claims struct {
@@ -59,9 +60,9 @@ func login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		http.SetCookie(w, &http.Cookie{
-			Name:       TOKEN_NAME,
-			Value:      signed,
-			Expires:    expiration,
+			Name:    TOKEN_NAME,
+			Value:   signed,
+			Expires: expiration,
 		})
 	} else {
 		loginPage(w, r)
